@@ -6,7 +6,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 
 trait EventDispatcherAwareTrait
 {
-    private ?EventDispatcherInterface $eventDispatcher = null;
+    protected ?EventDispatcherInterface $eventDispatcher = null;
 
     public function setEventDispatcher(EventDispatcherInterface $eventDispatcher): void
     {

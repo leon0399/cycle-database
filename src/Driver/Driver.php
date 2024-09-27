@@ -16,6 +16,9 @@ use Cycle\Database\Config\DriverConfig;
 use Cycle\Database\Config\PDOConnectionConfig;
 use Cycle\Database\Config\ProvidesSourceString;
 use Cycle\Database\Event\QueryExecuted;
+use Cycle\Database\Event\TransactionBeginning;
+use Cycle\Database\Event\TransactionCommited;
+use Cycle\Database\Event\TransactionRolledBack;
 use Cycle\Database\EventDispatcherAwareInterface;
 use Cycle\Database\EventDispatcherAwareTrait;
 use Cycle\Database\Exception\DriverException;
@@ -322,6 +325,15 @@ abstract class Driver implements DriverInterface, NamedInterface, LoggerAwareInt
      */
     public function beginTransaction(string $isolationLevel = null): bool
     {
+        $transactionCreated = $this->createTransaction($isolationLevel);
+
+        $this->eventDispatcher?->dispatch(new TransactionBeginning($this));
+
+        return $transactionCreated;
+    }
+
+    protected function createTransaction(string $isolationLevel = null): bool
+    {
         ++$this->transactionLevel;
 
         if ($this->transactionLevel === 1) {
@@ -391,13 +403,19 @@ abstract class Driver implements DriverInterface, NamedInterface, LoggerAwareInt
             $this->logger?->info('Commit transaction');
 
             try {
-                return $this->getPDO()->commit();
+                $transactionCommited = $this->getPDO()->commit();
+
+                $this->eventDispatcher?->dispatch(new TransactionCommited($this));
+
+                return $transactionCommited;
             } catch (Throwable $e) {
                 throw $this->mapException($e, 'COMMIT TRANSACTION');
             }
         }
 
         $this->releaseSavepoint($this->transactionLevel + 1);
+
+        $this->eventDispatcher?->dispatch(new TransactionCommited($this));
 
         return true;
     }
@@ -435,6 +453,8 @@ abstract class Driver implements DriverInterface, NamedInterface, LoggerAwareInt
         }
 
         $this->rollbackSavepoint($this->transactionLevel + 1);
+
+        $this->eventDispatcher?->dispatch(new TransactionRolledBack($this));
 
         return true;
     }

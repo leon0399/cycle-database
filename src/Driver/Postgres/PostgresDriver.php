@@ -19,6 +19,7 @@ use Cycle\Database\Driver\Postgres\Query\PostgresDeleteQuery;
 use Cycle\Database\Driver\Postgres\Query\PostgresInsertQuery;
 use Cycle\Database\Driver\Postgres\Query\PostgresSelectQuery;
 use Cycle\Database\Driver\Postgres\Query\PostgresUpdateQuery;
+use Cycle\Database\Event\TransactionBeginning;
 use Cycle\Database\Exception\DriverException;
 use Cycle\Database\Exception\StatementException;
 use Cycle\Database\Query\QueryBuilder;
@@ -130,18 +131,7 @@ class PostgresDriver extends Driver
         $this->primaryKeys = [];
     }
 
-    /**
-     * Start SQL transaction with specified isolation level (not all DBMS support it). Nested
-     * transactions are processed using savepoints.
-     *
-     * @link http://en.wikipedia.org/wiki/Database_transaction
-     * @link http://en.wikipedia.org/wiki/Isolation_(database_systems)
-     *
-     * @param string|null $isolationLevel
-     *
-     * @return bool
-     */
-    public function beginTransaction(string $isolationLevel = null): bool
+    protected function createTransaction(string $isolationLevel = null): bool
     {
         ++$this->transactionLevel;
 
