@@ -15,6 +15,8 @@ use BackedEnum;
 use Cycle\Database\Config\DriverConfig;
 use Cycle\Database\Config\PDOConnectionConfig;
 use Cycle\Database\Config\ProvidesSourceString;
+use Cycle\Database\EventDispatcherAwareInterface;
+use Cycle\Database\EventDispatcherAwareTrait;
 use Cycle\Database\Exception\DriverException;
 use Cycle\Database\Exception\ReadonlyConnectionException;
 use Cycle\Database\Exception\StatementException;
@@ -35,9 +37,10 @@ use Throwable;
 /**
  * Provides low level abstraction at top of
  */
-abstract class Driver implements DriverInterface, NamedInterface, LoggerAwareInterface
+abstract class Driver implements DriverInterface, NamedInterface, LoggerAwareInterface, EventDispatcherAwareInterface
 {
     use LoggerAwareTrait;
+    use EventDispatcherAwareTrait;
 
     /**
      * DateTime format to be used to perform automatic conversion of DateTime objects.

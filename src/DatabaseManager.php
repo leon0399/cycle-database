@@ -17,6 +17,7 @@ use Cycle\Database\Driver\Driver;
 use Cycle\Database\Driver\DriverInterface;
 use Cycle\Database\Exception\DatabaseException;
 use Cycle\Database\Exception\DBALException;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -28,7 +29,7 @@ use Psr\Log\NullLogger;
  *
  * echo $manager->database('runtime')->select()->from('users')->count();
  */
-final class DatabaseManager implements DatabaseProviderInterface, LoggerAwareInterface
+final class DatabaseManager implements DatabaseProviderInterface, LoggerAwareInterface, EventDispatcherAwareInterface
 {
     /** @var Database[] */
     private array $databases = [];
@@ -38,7 +39,8 @@ final class DatabaseManager implements DatabaseProviderInterface, LoggerAwareInt
 
     public function __construct(
         private DatabaseConfig $config,
-        private ?LoggerFactoryInterface $loggerFactory = null
+        private ?LoggerFactoryInterface $loggerFactory = null,
+        private ?EventDispatcherInterface $eventDispatcher = null
     ) {
     }
 
@@ -56,6 +58,19 @@ final class DatabaseManager implements DatabaseProviderInterface, LoggerAwareInt
             }
         }
     }
+
+    public function setEventDispatcher(EventDispatcherInterface $eventDispatcher): void
+    {
+        $this->eventDispatcher = $eventDispatcher;
+
+        // Assign the event dispatcher to all initialized drivers
+        foreach ($this->drivers as $driver) {
+            if ($driver instanceof EventDispatcherAwareInterface) {
+                $driver->setEventDispatcher($this->eventDispatcher);
+            }
+        }
+    }
+
 
     /**
      * Get all databases.
