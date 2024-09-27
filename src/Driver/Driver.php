@@ -15,6 +15,7 @@ use BackedEnum;
 use Cycle\Database\Config\DriverConfig;
 use Cycle\Database\Config\PDOConnectionConfig;
 use Cycle\Database\Config\ProvidesSourceString;
+use Cycle\Database\Event\QueryExecuted;
 use Cycle\Database\EventDispatcherAwareInterface;
 use Cycle\Database\EventDispatcherAwareTrait;
 use Cycle\Database\Exception\DriverException;
@@ -500,6 +501,16 @@ abstract class Driver implements DriverInterface, NamedInterface, LoggerAwareInt
                     $this->logger->info($queryString, $context);
                 }
             }
+
+            $this->eventDispatcher?->dispatch(
+                new QueryExecuted(
+                    $query,
+                    $parameters,
+                    $queryStart,
+                    microtime(true),
+                    $this
+                )
+            );
         }
     }
 

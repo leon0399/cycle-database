@@ -181,6 +181,10 @@ final class DatabaseManager implements DatabaseProviderInterface, LoggerAwareInt
             }
         }
 
+        if ($driverObject instanceof EventDispatcherAwareInterface && $this->eventDispatcher) {
+            $driverObject->setEventDispatcher($this->eventDispatcher);
+        }
+
         return $this->drivers[$driver];
     }
 
